@@ -4,7 +4,22 @@
 @implementation AIRMapOverlayRenderer
 
 - (void)drawMapRect:(MKMapRect)mapRect zoomScale:(MKZoomScale)zoomScale inContext:(CGContextRef)context {
-    UIImage *image = [(AIRMapOverlay *)self.overlay overlayImage];
+//    UIImage *image = [[(AIRMapOverlay *)self.overlay overlayImageList] firstObject];
+    NSInteger index = [(AIRMapOverlay *) self.overlay imageIndex];
+    NSInteger maxIndex = [[(AIRMapOverlay *) self.overlay overlayImageList] count];
+    UIImage *image;
+    NSLog(@">>> index: %d", (long)index);
+    if ((index) < maxIndex)
+         image = [[(AIRMapOverlay *)self.overlay overlayImageList] objectAtIndex:index];
+    else {
+         ((AIRMapOverlay *) self.overlay).imageIndex = 0;
+         image = [[(AIRMapOverlay *)self.overlay overlayImageList] objectAtIndex:0];
+    }
+        
+
+
+//   UIImage *image = [(AIRMapOverlay *)self.overlay overlayImage];
+    
     
     CGContextSaveGState(context);
     
@@ -23,8 +38,11 @@
 }
 
 - (BOOL)canDrawMapRect:(MKMapRect)mapRect zoomScale:(MKZoomScale)zoomScale {
-    return [(AIRMapOverlay *)self.overlay overlayImage] != nil;
+    return [(AIRMapOverlay *)self.overlay overlayImageList] != nil;
+//    return [(AIRMapOverlay *)self.overlay overlayImage] != nil;
+
 }
+
 
 @end
 

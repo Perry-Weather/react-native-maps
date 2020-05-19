@@ -13,6 +13,29 @@
 
 RCT_EXPORT_MODULE()
 
+RCT_EXPORT_METHOD(step:(nonnull NSNumber *)reactTag)
+{
+    NSLog(@"stepping in native");
+    
+    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+         id view = viewRegistry[reactTag];
+         if (![view isKindOfClass:[AIRMapOverlay class]]) {
+             RCTLogError(@"Invalid view returned from registry, expecting AIRMap, got: %@", view);
+         } else {
+             NSLog(@"Overlay exists! Might be able to get renderer here.");
+//             [(AIRMapOverlay *) view renderer];
+             AIRMapOverlay* overlay =  view;
+             
+             [overlay IncreaseIndex];
+             [[overlay renderer] setNeedsDisplay];
+                                      
+
+
+         }
+     }];
+}
+
+
 - (UIView *)view
 {
     AIRMapOverlay *overlay = [AIRMapOverlay new];
@@ -22,6 +45,8 @@ RCT_EXPORT_MODULE()
 
 RCT_REMAP_VIEW_PROPERTY(bounds, boundsRect, NSArray)
 RCT_REMAP_VIEW_PROPERTY(image, imageSrc, NSString)
+RCT_REMAP_VIEW_PROPERTY(imageList, imageList, NSArray<NSString*>)
+
 
 @end
 

@@ -8,6 +8,8 @@
 
 @interface AIRMapOverlay()
 @property (nonatomic, strong, readwrite) UIImage *overlayImage;
+@property (nonatomic, strong, readwrite) NSMutableArray<UIImage *> *overlayImageList;
+
 @end
 
 @implementation AIRMapOverlay {
@@ -15,6 +17,116 @@
     CLLocationCoordinate2D _southWest;
     CLLocationCoordinate2D _northEast;
     MKMapRect _mapRect;
+}
+
+- (void) fetchSingleImage: ( NSMutableArray<NSString*> * )remainingImgList forFirst:(Boolean)first
+{
+    __weak typeof(self) weakSelf = self;
+    _reloadImageCancellationBlock = [[_bridge moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest:[remainingImgList firstObject]]
+                        size:weakSelf.bounds.size
+                       scale:RCTScreenScale()
+                     clipped:YES
+                  resizeMode:RCTResizeModeCenter
+               progressBlock:nil
+            partialLoadBlock:nil
+             completionBlock:^(NSError *error, UIImage *image) {
+                 if (error) {
+                     NSLog(@"%@", error);
+                 }
+                 dispatch_async(dispatch_get_main_queue(), ^{
+                     NSLog(@">>> IMAGE: %@", image);
+//                                                                             weakSelf.overlayImage = image;
+                     if (weakSelf.overlayImageList == nil)
+                     {
+                         weakSelf.overlayImageList = [[NSMutableArray alloc]init];
+                     }
+                     [weakSelf.overlayImageList addObject:image];
+                     
+//                     if (weakSelf.imageList count)
+                     [remainingImgList removeObjectAtIndex:0];
+                     
+                     
+                     
+                     [weakSelf createOverlayRendererIfPossible];
+                     if (first == true)
+                     {
+                         [weakSelf update];
+                     }
+                     //Need to call this on the first image only.
+
+                     
+                     if  ([remainingImgList count] > 0)
+                         [self fetchSingleImage:remainingImgList forFirst:false];
+                 });
+             }];
+
+    
+}
+
+
+- (void) setImageList: (NSMutableArray<NSString *> *)imageList
+{
+    NSLog(@">>> SET_IMAGERC_LIST: %@", imageList);
+    _imageList = imageList;
+    
+    if (_reloadImageCancellationBlock) {
+        _reloadImageCancellationBlock();
+        _reloadImageCancellationBlock = nil;
+    }
+//    weakSelf.overlayImageList = [[NSMutableArray alloc]init];
+
+    NSMutableArray<NSString *>* list = [NSMutableArray alloc];
+    list = [list initWithArray:imageList copyItems:true];
+//    __weak typeof(self) weakSelf = self;
+    //this probably won't be in order.
+    [self fetchSingleImage: list forFirst:true];
+//    for (NSString* img in imageList) {
+//        _reloadImageCancellationBlock = [[_bridge moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest:img]
+//                                                                                size:weakSelf.bounds.size
+//                                                                               scale:RCTScreenScale()
+//                                                                             clipped:YES
+//                                                                          resizeMode:RCTResizeModeCenter
+//                                                                       progressBlock:nil
+//                                                                    partialLoadBlock:nil
+//                                                                     completionBlock:^(NSError *error, UIImage *image) {
+//                                                                         if (error) {
+//                                                                             NSLog(@"%@", error);
+//                                                                         }
+//                                                                         dispatch_async(dispatch_get_main_queue(), ^{
+//                                                                             NSLog(@">>> IMAGE: %@", image);
+//                                                                             if (weakSelf.overlayImageList == nil)
+//                                                                             {
+//                                                                                 weakSelf.overlayImageList = [[NSMutableArray alloc]init];
+//                                                                             }
+//                                                                             [weakSelf.overlayImageList addObject:image];
+//
+//                                                                             [weakSelf createOverlayRendererIfPossible];
+//                                                                             [weakSelf update];
+//                                                                         });
+//                                                                     }];
+//    }
+//
+//
+//    __weak typeof(self) weakSelf = self;
+//    _reloadImageCancellationBlock = [[_bridge moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest:_imageSrc]
+//                                                                            size:weakSelf.bounds.size
+//                                                                           scale:RCTScreenScale()
+//                                                                         clipped:YES
+//                                                                      resizeMode:RCTResizeModeCenter
+//                                                                   progressBlock:nil
+//                                                                partialLoadBlock:nil
+//                                                                 completionBlock:^(NSError *error, UIImage *image) {
+//                                                                     if (error) {
+//                                                                         NSLog(@"%@", error);
+//                                                                     }
+//                                                                     dispatch_async(dispatch_get_main_queue(), ^{
+//                                                                         NSLog(@">>> IMAGE: %@", image);
+//                                                                         weakSelf.overlayImage = image;
+//                                                                         [weakSelf createOverlayRendererIfPossible];
+//                                                                         [weakSelf update];
+//                                                                     });
+//                                                                 }];
+     
 }
 
 - (void)setImageSrc:(NSString *)imageSrc
@@ -42,7 +154,7 @@
                                                                          NSLog(@">>> IMAGE: %@", image);
                                                                          weakSelf.overlayImage = image;
                                                                          [weakSelf createOverlayRendererIfPossible];
-                                                                         [weakSelf update];
+//                                                                         [weakSelf update];
                                                                      });
                                                                  }];
 }
@@ -63,9 +175,20 @@
 
 - (void)createOverlayRendererIfPossible
 {
-    if (MKMapRectIsEmpty(_mapRect) || !self.overlayImage) return;
+    if (MKMapRectIsEmpty(_mapRect) || (!self.overlayImage && !self.overlayImageList) || self.renderer ) return;
+//    if (MKMapRectIsEmpty(_mapRect) || (!self.overlayImage && (!self.overlayImageList && self.overlayImageList.count < 1))) return;
+    
     __weak typeof(self) weakSelf = self;
     self.renderer = [[AIRMapOverlayRenderer alloc] initWithOverlay:weakSelf];
+//    [NSTimer scheduledTimerWithTimeInterval:(0.5) target:self selector:@selector(onTimer) userInfo:nil repeats:YES];
+}
+
+-(void)onTimer {
+//    [self update];
+//    [self draw];
+    [self IncreaseIndex];
+    [[self renderer] setNeedsDisplay];
+//    [self setNeedsDisplay];
 }
 
 - (void)update
@@ -100,4 +223,10 @@
     return NO;
 }
 
+- (void)IncreaseIndex
+{
+    self.imageIndex = self.imageIndex+1;
+}
+
 @end
+

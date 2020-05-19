@@ -17,8 +17,11 @@
 @property (nonatomic, weak) RCTBridge *bridge;
 
 @property (nonatomic, strong) NSString *name;
+@property (nonatomic, assign) NSInteger imageIndex;
 @property (nonatomic, copy) NSString *imageSrc;
+@property (nonatomic, copy) NSMutableArray<NSString*> *imageList;
 @property (nonatomic, strong, readonly) UIImage *overlayImage;
+@property (nonatomic, strong, readonly) NSMutableArray<UIImage *> *overlayImageList;
 @property (nonatomic, copy) NSArray *boundsRect;
 @property (nonatomic, assign) NSInteger rotation;
 @property (nonatomic, assign) CGFloat transparency;
@@ -32,5 +35,6 @@
 @property(nonatomic, readonly) MKMapRect boundingMapRect;
 - (BOOL)intersectsMapRect:(MKMapRect)mapRect;
 - (BOOL)canReplaceMapContent;
+- (void)IncreaseIndex;
 
 @end
