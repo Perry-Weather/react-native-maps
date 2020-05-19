@@ -25,6 +25,8 @@
 @property (nonatomic, copy) NSString *urlTemplate;
 @property NSInteger maximumZ;
 @property NSInteger minimumZ;
+@property float opacity;
+
 @property BOOL flipY;
 @property BOOL shouldReplaceMapContent;
 @property CGFloat tileSize;

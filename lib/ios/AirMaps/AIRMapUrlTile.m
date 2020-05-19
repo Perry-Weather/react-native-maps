@@ -32,6 +32,15 @@
   [self update];
 }
 
+- (void) setOpacity:(float)opacity
+{
+    _opacity = opacity;
+    if (self.renderer)
+    {
+        self.renderer.alpha = _opacity;
+    }
+}
+
 - (void)setMinimumZ:(NSUInteger)minimumZ
 {
   _minimumZ = minimumZ;
@@ -79,10 +88,15 @@
     if (self.flipY) {
         self.tileOverlay.geometryFlipped = self.flipY;
     }
+
     if (_tileSizeSet) {
         self.tileOverlay.tileSize = CGSizeMake(self.tileSize, self.tileSize);
     }
     self.renderer = [[MKTileOverlayRenderer alloc] initWithTileOverlay:self.tileOverlay];
+    
+    if (self.opacity) {
+        self.renderer.alpha = self.opacity;
+    }
 }
 
 - (void) update
