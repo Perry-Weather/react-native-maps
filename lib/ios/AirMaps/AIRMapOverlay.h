@@ -35,6 +35,6 @@
 @property(nonatomic, readonly) MKMapRect boundingMapRect;
 - (BOOL)intersectsMapRect:(MKMapRect)mapRect;
 - (BOOL)canReplaceMapContent;
-- (void)IncreaseIndex;
+- (NSInteger)IncreaseIndex;
 
 @end

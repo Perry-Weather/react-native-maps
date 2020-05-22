@@ -13,7 +13,7 @@
 
 RCT_EXPORT_MODULE()
 
-RCT_EXPORT_METHOD(step:(nonnull NSNumber *)reactTag)
+RCT_EXPORT_METHOD(step:(nonnull NSNumber *)reactTag :(RCTResponseSenderBlock)callback)
 {
     NSLog(@"stepping in native");
     
@@ -25,15 +25,21 @@ RCT_EXPORT_METHOD(step:(nonnull NSNumber *)reactTag)
              NSLog(@"Overlay exists! Might be able to get renderer here.");
 //             [(AIRMapOverlay *) view renderer];
              AIRMapOverlay* overlay =  view;
+            
              
-             [overlay IncreaseIndex];
+             NSInteger idx = [overlay IncreaseIndex];
+//             NSInteger idx = [overlay imageIndex];
+            
+             callback(@[[NSNull null], @(idx)]);
              [[overlay renderer] setNeedsDisplay];
-                                      
+            
 
 
          }
      }];
 }
+
+//RCT_EXPORT_METHOD(setImageIndex)
 
 
 - (UIView *)view

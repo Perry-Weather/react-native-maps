@@ -8,8 +8,12 @@
     NSInteger index = [(AIRMapOverlay *) self.overlay imageIndex];
     NSInteger maxIndex = [[(AIRMapOverlay *) self.overlay overlayImageList] count];
     UIImage *image;
-    NSLog(@">>> index: %d", (long)index);
-    if ((index) < maxIndex)
+    NSLog(@">>> index: %ld", (long)index);
+    if (maxIndex == 0)
+    {
+        return;
+    }
+    else if ((index+1) < maxIndex)
          image = [[(AIRMapOverlay *)self.overlay overlayImageList] objectAtIndex:index];
     else {
          ((AIRMapOverlay *) self.overlay).imageIndex = 0;

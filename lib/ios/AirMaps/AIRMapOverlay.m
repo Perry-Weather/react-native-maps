@@ -68,13 +68,14 @@
 {
     NSLog(@">>> SET_IMAGERC_LIST: %@", imageList);
     _imageList = imageList;
+    [_overlayImageList removeAllObjects];
     
     if (_reloadImageCancellationBlock) {
         _reloadImageCancellationBlock();
         _reloadImageCancellationBlock = nil;
     }
 //    weakSelf.overlayImageList = [[NSMutableArray alloc]init];
-
+    
     NSMutableArray<NSString *>* list = [NSMutableArray alloc];
     list = [list initWithArray:imageList copyItems:true];
 //    __weak typeof(self) weakSelf = self;
@@ -223,9 +224,10 @@
     return NO;
 }
 
-- (void)IncreaseIndex
+- (NSInteger)IncreaseIndex
 {
     self.imageIndex = self.imageIndex+1;
+    return self.imageIndex;
 }
 
 @end
