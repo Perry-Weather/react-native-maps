@@ -63,6 +63,7 @@ public class AirMapUrlTile extends AirMapFeature {
   private float maximumZ;
   private float minimumZ;
   private boolean flipY;
+  private float opacity;
 
   public AirMapUrlTile(Context context) {
     super(context);
@@ -84,6 +85,12 @@ public class AirMapUrlTile extends AirMapFeature {
       tileOverlay.setZIndex(zIndex);
     }
   }
+
+  public void setOpacity(float opacity) {
+    this.opacity = opacity;
+    if (tileOverlay != null) {
+      tileOverlay.clearTileCache();
+    }
 
   public void setMaximumZ(float maximumZ) {
     this.maximumZ = maximumZ;
@@ -116,6 +123,7 @@ public class AirMapUrlTile extends AirMapFeature {
   private TileOverlayOptions createTileOverlayOptions() {
     TileOverlayOptions options = new TileOverlayOptions();
     options.zIndex(zIndex);
+    options.transparency(opacity);
     this.tileProvider = new AIRMapUrlTileProvider(256, 256, this.urlTemplate);
     options.tileProvider(this.tileProvider);
     return options;

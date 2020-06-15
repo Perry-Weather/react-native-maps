@@ -60,4 +60,9 @@ public class AirMapUrlTileManager extends ViewGroupManager<AirMapUrlTile> {
     view.setFlipY(flipY);
   }
 
+  @ReactProp(name = "opacity", defaultFloat = 1.0f)
+  public void setOpacity(AirMapUrlTile view, float opacity) {
+    view.setOpacity(1.0f - opacity);
+  }
+
 }
