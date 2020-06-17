@@ -13,6 +13,8 @@ import java.util.Collections;
 import java.util.List;
 
 public class MapsPackage implements ReactPackage {
+  private AirMapOverlayManager mapOverlayManager;
+
   public MapsPackage(Activity activity) {
   } // backwards compatibility
 
@@ -21,7 +23,14 @@ public class MapsPackage implements ReactPackage {
 
   @Override
   public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
-    return Arrays.<NativeModule>asList(new AirMapModule(reactContext));
+    if (mapOverlayManager == null) {
+      mapOverlayManager = new AirMapOverlayManager(reactContext);
+    }
+
+    return Arrays.<NativeModule>asList(
+            new AirMapModule(reactContext),
+            new AirMapOverlayModule(reactContext, mapOverlayManager)
+        );
   }
 
   // Deprecated RN 0.47
@@ -31,6 +40,10 @@ public class MapsPackage implements ReactPackage {
 
   @Override
   public List<ViewManager> createViewManagers(ReactApplicationContext reactContext) {
+    if (mapOverlayManager == null) {
+      mapOverlayManager = new AirMapOverlayManager(reactContext);
+    }
+
     AirMapCalloutManager calloutManager = new AirMapCalloutManager();
     AirMapMarkerManager annotationManager = new AirMapMarkerManager();
     AirMapPolylineManager polylineManager = new AirMapPolylineManager(reactContext);
@@ -42,9 +55,10 @@ public class MapsPackage implements ReactPackage {
     AirMapUrlTileManager urlTileManager = new AirMapUrlTileManager(reactContext);
     AirMapWMSTileManager gsUrlTileManager = new AirMapWMSTileManager(reactContext);
     AirMapLocalTileManager localTileManager = new AirMapLocalTileManager(reactContext);
-    AirMapOverlayManager overlayManager = new AirMapOverlayManager(reactContext);
+//    AirMapOverlayManager overlayManager = new AirMapOverlayManager(reactContext);
     AirMapHeatmapManager heatmapManager = new AirMapHeatmapManager();
     mapManager.setMarkerManager(annotationManager);
+
 
     return Arrays.<ViewManager>asList(
         calloutManager,
@@ -58,7 +72,8 @@ public class MapsPackage implements ReactPackage {
         urlTileManager,
         gsUrlTileManager,
         localTileManager,
-        overlayManager,
+//        overlayManager,
+        mapOverlayManager,
         heatmapManager
     );
   }
