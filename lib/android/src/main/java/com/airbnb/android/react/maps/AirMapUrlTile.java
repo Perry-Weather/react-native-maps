@@ -91,6 +91,7 @@ public class AirMapUrlTile extends AirMapFeature {
     if (tileOverlay != null) {
       tileOverlay.clearTileCache();
     }
+  }
 
   public void setMaximumZ(float maximumZ) {
     this.maximumZ = maximumZ;
