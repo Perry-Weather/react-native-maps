@@ -90,7 +90,6 @@ public class AirMapUrlTile extends AirMapFeature {
     this.opacity = opacity;
     if (tileOverlay != null) {
       tileOverlay.setTransparency(opacity);
-      tileOverlay.clearTileCache();
     }
   }
 
