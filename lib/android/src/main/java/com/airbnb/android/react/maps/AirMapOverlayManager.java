@@ -77,7 +77,7 @@ public class AirMapOverlayManager extends ViewGroupManager<AirMapOverlay> {
   }
 
   @ReactProp(name = "imageList")
-  public void setImageList(AirMapOverlay view, @Nullable ReadableArray source) throws IOException { view.setImageList(source);}
+  public void setImageList(AirMapOverlay view, @Nullable ReadableArray source) throws IOException, InterruptedException  { view.setImageList(source);}
 
   @ReactProp(name = "tappable", defaultBoolean = false)
   public void setTappable(AirMapOverlay view, boolean tapabble) {
