@@ -5,7 +5,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.Image;
 import android.os.AsyncTask;
-import android.util.Log;
+
+import androidx.annotation.MainThread;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReactContext;
@@ -24,7 +25,6 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Array;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -46,7 +46,8 @@ public class AirMapOverlay extends AirMapFeature implements ImageReadable {
   public int imageIndex;
   private List<String> imageList;
   private Stack<String> iteratingImageList = new Stack<>();
-  private ArrayList<BitmapDescriptor> overlayImageList = new ArrayList<>();
+  private ArrayList<Bitmap> overlayImageList = new ArrayList<Bitmap>();
+  private AsyncTask<String, String, Bitmap> imageFetchTask;
 
 
   private final ImageReader mImageReader;
@@ -66,7 +67,9 @@ public class AirMapOverlay extends AirMapFeature implements ImageReadable {
               getId(),
               "topChange",
               event);
-    } catch (Exception e) {
+    }
+    catch (Exception e)
+    {
       e.printStackTrace();
     }
   }
@@ -88,92 +91,105 @@ public class AirMapOverlay extends AirMapFeature implements ImageReadable {
   }
 
   public void setTransparency(float transparency) {
-    this.transparency = transparency;
-    if (groundOverlay != null) {
-      groundOverlay.setTransparency(transparency);
-    }
+      this.transparency = transparency;
+      if (groundOverlay != null) {
+          groundOverlay.setTransparency(transparency);
+      }
   }
 
   public int increaseIndex() {
+
     imageIndex++;
     BitmapDescriptor bmpDesc = BitmapDescriptorFactory.defaultMarker();
     try {
-      bmpDesc = this.overlayImageList.get(this.imageIndex);
-
-//      bmpDesc = overlayImageList.get(imageIndex);
-    } catch (IndexOutOfBoundsException oobException) {
-      if (this.overlayImageList.size() > 0) {
-        bmpDesc = this.overlayImageList.get(0);
+      bmpDesc = BitmapDescriptorFactory.fromBitmap(overlayImageList.get(imageIndex));
+      getGroundOverlayOptions().visible(true);
+    }
+    catch(IndexOutOfBoundsException oobException)
+    {
+      if (overlayImageList.size() > 0) {
+        bmpDesc = BitmapDescriptorFactory.fromBitmap(overlayImageList.get(0));
       }
-      this.imageIndex = 0;
+      imageIndex = 0;
+
     }
-    GroundOverlayOptions gOpt = getGroundOverlayOptions();
-    if (!gOpt.isVisible()) {
-      gOpt.visible(true);
-      gOpt.image(bmpDesc);
-    }
-    if (this.groundOverlay != null) {
-      this.groundOverlay.setImage(bmpDesc);
-    }
-//
-//    GroundOverlayOptions gOpt = getGroundOverlayOptions();
-//    if (gOpt.getImage() == BitmapDescriptorFactory.defaultMarker())
-//    {
-//      BitmapDescriptor bmpDesc = BitmapDescriptorFactory.fromBitmap(image);
-//      gOpt.image(bmpDesc);
-//      gOpt.visible(true);
-//    }
+    if (groundOverlay != null)
+      groundOverlay.setImage(bmpDesc);
     return imageIndex;
   }
 
-  public void setImageList(ReadableArray uriImageList) throws IOException {
+  public void setImageList(ReadableArray uriImageList) throws IOException, InterruptedException {
     ArrayList<Object> arrayList = uriImageList.toArrayList();
     List<String> strings = new ArrayList<>(arrayList.size());
     for (Object object : arrayList) {
       strings.add(Objects.toString(object, null));
     }
+
+    if (imageFetchTask != null)
+    {
+      imageFetchTask.cancel(true);
+      imageFetchTask = null;
+      Thread.sleep(100);
+    }
     imageList = strings;
-//    for( Bitmap bmp: overlayImageList
-//         ) {
-//      bmp.recycle();
+    for( Bitmap bmp: overlayImageList
+         ) {
+      bmp.recycle();
+    }
+    
+    //Maybe show a short dialog, so we have time to clear?
+
 
     overlayImageList.clear();
 
-
-//    for (String image : imageList) {
-
-//      Bitmap bitmap = BitmapFactory.decodeStream((InputStream)new URL(image).getContent());
-//      overlayImageList.add(bitmap);
+    //start loading images one at a time starting here.
+    //for (String image: imageList) {
       loadNext();
-//      BitmapFactory.decodeByteArray(result, 0, result.length)
-
-//    }
+    //}
   }
 
 
-  public void loadNext() {
+  public void loadNext()
+  {
+//    imageList
+
     iteratingImageList.addAll(imageList);
     String url = iteratingImageList.remove(0);
-    new LoadImage().execute(url);
-  }
+    imageFetchTask = new LoadImage().execute(url);
 
-  public void loadNext(Bitmap image) {
+//    AsyncTask<String, String, Bitmap> imageLoader = new LoadImage();
+//    imageLoader.execute(url);
+
+  }
+  public void loadNext(Bitmap image)
+  {
+    //Maybe check a member variable here if it should load the next???
     if (image != null) {
-      this.overlayImageList.add(BitmapDescriptorFactory.fromBitmap(image));
+      overlayImageList.add(image);
 
       GroundOverlayOptions gOpt = getGroundOverlayOptions();
-      if (gOpt.getImage() == BitmapDescriptorFactory.defaultMarker()) {
+      if (gOpt.getImage() == BitmapDescriptorFactory.defaultMarker() || gOpt.getImage() == null)
+      {
         BitmapDescriptor bmpDesc = BitmapDescriptorFactory.fromBitmap(image);
         gOpt.image(bmpDesc);
         gOpt.visible(true);
       }
+//      if (!gOpt.isVisible())
+//      {
+//
+//        gOpt.visible(true);
+//      }
 
-      if (!this.iteratingImageList.empty()) {
-        String url = this.iteratingImageList.remove(0);
-        new LoadImage().execute(url);
+      if (!iteratingImageList.empty())
+      {
+        String url = iteratingImageList.remove(0);
+        imageFetchTask = new LoadImage().execute(url);
       }
     }
   }
+
+
+
 
 
   public void setImage(String uri) {
@@ -201,7 +217,7 @@ public class AirMapOverlay extends AirMapFeature implements ImageReadable {
     }
     GroundOverlayOptions options = new GroundOverlayOptions();
     if (this.overlayImageList != null && this.overlayImageList.size() > 0) {
-      options.image(this.overlayImageList.get(0));
+      options.image(BitmapDescriptorFactory.fromBitmap(this.overlayImageList.get(0)));
     } else {
       // add stub image to be able to instantiate the overlay
       // and store a reference to it in MapView
@@ -247,7 +263,7 @@ public class AirMapOverlay extends AirMapFeature implements ImageReadable {
 
   @Override
   public void setIconBitmapDescriptor(
-          BitmapDescriptor iconBitmapDescriptor) {
+      BitmapDescriptor iconBitmapDescriptor) {
     this.iconBitmapDescriptor = iconBitmapDescriptor;
   }
 
@@ -256,12 +272,12 @@ public class AirMapOverlay extends AirMapFeature implements ImageReadable {
     this.groundOverlay = getGroundOverlay();
     if (this.groundOverlay != null) {
       this.groundOverlay.setVisible(true);
-//      this.groundOverlay.setImage(this.iconBitmapDescriptor);
-      this.groundOverlay.setImage(this.overlayImageList.get(imageIndex));
+      this.groundOverlay.setImage(this.iconBitmapDescriptor);
       this.groundOverlay.setTransparency(this.transparency);
       this.groundOverlay.setClickable(this.tappable);
     }
   }
+
 
 
   private GroundOverlay getGroundOverlay() {
@@ -281,33 +297,41 @@ public class AirMapOverlay extends AirMapFeature implements ImageReadable {
 
   private class LoadImage extends AsyncTask<String, String, Bitmap> {
     Bitmap bitmap;
+    Boolean isCanceled = false;
+    @Override
+    protected void onPreExecute() {
+      super.onPreExecute();
 
+    }
     @Override
     protected Bitmap doInBackground(String... args) {
-      try {
-//        bitmap = BitmapFactory.decodeStream((InputStream)new URL(args[0]).getContent());
-        URL url = new URL(args[0]);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setDoInput(true);
-        connection.connect();
-        InputStream input = connection.getInputStream();
-        bitmap = BitmapFactory.decodeStream(input);
-      } catch (Exception e) {
-        Log.e("PocketPerry", e.getLocalizedMessage());
-        e.printStackTrace();
+      if (isCancelled() != true) {
+        try {
+//          bitmap = BitmapFactory.decodeStream((InputStream) new URL(args[0]).getContent());
+          bitmap = BitmapFactory.decodeStream(new URL(args[0]).openStream());
+//        overlayImageList.add(bitmap);
+        }
+        catch (IOException ioEx)
+        {
+          ioEx.printStackTrace();
+        }
+        catch (Exception e) {
+          e.printStackTrace();
+
+        }
+        return bitmap;
       }
-      return bitmap;
+      else return null;
     }
-
-
-
     @Override
     protected void onPostExecute(Bitmap image) {
-      if (image != null) {
-        loadNext(image);
+      if (!isCancelled()) {
+
+        if (image != null) {
+          loadNext(image);
+        }
       }
     }
   }
 }
-
 
