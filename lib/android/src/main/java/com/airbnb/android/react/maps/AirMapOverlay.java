@@ -103,7 +103,7 @@ public class AirMapOverlay extends AirMapFeature implements ImageReadable {
     BitmapDescriptor bmpDesc = BitmapDescriptorFactory.defaultMarker();
     try {
       bmpDesc = BitmapDescriptorFactory.fromBitmap(overlayImageList.get(imageIndex));
-      getGroundOverlayOptions().visible(true);
+      groundOverlay.setVisible(true);
     }
     catch(IndexOutOfBoundsException oobException)
     {
@@ -128,19 +128,21 @@ public class AirMapOverlay extends AirMapFeature implements ImageReadable {
     if (imageFetchTask != null)
     {
       imageFetchTask.cancel(true);
-      imageFetchTask = null;
-      Thread.sleep(100);
+//      imageFetchTask = null;
     }
     imageList = strings;
-    for( Bitmap bmp: overlayImageList
-         ) {
-      bmp.recycle();
+    if (overlayImageList != null && !overlayImageList.isEmpty()) {
+      for (Bitmap bmp : overlayImageList
+      ) {//      Thread.sleep(100);
+
+        bmp.recycle();
+      }
+      overlayImageList.clear();
     }
     
     //Maybe show a short dialog, so we have time to clear?
 
 
-    overlayImageList.clear();
 
     //start loading images one at a time starting here.
     //for (String image: imageList) {
@@ -167,18 +169,15 @@ public class AirMapOverlay extends AirMapFeature implements ImageReadable {
     if (image != null) {
       overlayImageList.add(image);
 
-      GroundOverlayOptions gOpt = getGroundOverlayOptions();
-      if (gOpt.getImage() == BitmapDescriptorFactory.defaultMarker() || gOpt.getImage() == null)
-      {
-        BitmapDescriptor bmpDesc = BitmapDescriptorFactory.fromBitmap(image);
-        gOpt.image(bmpDesc);
-        gOpt.visible(true);
-      }
-//      if (!gOpt.isVisible())
+//      GroundOverlayOptions gOpt = getGroundOverlayOptions();
+//      if (gOpt.getImage() == BitmapDescriptorFactory.defaultMarker() || gOpt.getImage() == null)
 //      {
 //
+//        BitmapDescriptor bmpDesc = BitmapDescriptorFactory.fromBitmap(image);
+//        gOpt.image(bmpDesc);
 //        gOpt.visible(true);
 //      }
+
 
       if (!iteratingImageList.empty())
       {
