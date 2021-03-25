@@ -19,6 +19,16 @@
     MKMapRect _mapRect;
 }
 
+- (void) setOpacity:(float)opacity
+ {
+     _opacity = opacity;
+     if (self.renderer)
+     {
+         self.renderer.alpha = _opacity;
+     }
+ }
+
+
 - (void) fetchSingleImage: ( NSMutableArray<NSString*> * )remainingImgList forFirst:(Boolean)first
 {
     __weak typeof(self) weakSelf = self;
@@ -182,6 +192,10 @@
     __weak typeof(self) weakSelf = self;
     self.renderer = [[AIRMapOverlayRenderer alloc] initWithOverlay:weakSelf];
 //    [NSTimer scheduledTimerWithTimeInterval:(0.5) target:self selector:@selector(onTimer) userInfo:nil repeats:YES];
+    
+    if (self.opacity) {
+        self.renderer.alpha = self.opacity;
+    }
 }
 
 -(void)onTimer {

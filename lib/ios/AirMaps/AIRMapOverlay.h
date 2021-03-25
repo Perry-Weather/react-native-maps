@@ -26,6 +26,7 @@
 @property (nonatomic, assign) NSInteger rotation;
 @property (nonatomic, assign) CGFloat transparency;
 @property (nonatomic, assign) NSInteger zIndex;
+@property float opacity;
 
 @property (nonatomic, copy) RCTBubblingEventBlock onPress;
 

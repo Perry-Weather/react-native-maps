@@ -52,6 +52,7 @@ RCT_EXPORT_METHOD(step:(nonnull NSNumber *)reactTag :(RCTResponseSenderBlock)cal
 RCT_REMAP_VIEW_PROPERTY(bounds, boundsRect, NSArray)
 RCT_REMAP_VIEW_PROPERTY(image, imageSrc, NSString)
 RCT_REMAP_VIEW_PROPERTY(imageList, imageList, NSArray<NSString*>)
+RCT_EXPORT_VIEW_PROPERTY(opacity, float)
 
 
 @end
