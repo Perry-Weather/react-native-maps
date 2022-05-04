@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -304,24 +305,34 @@ public class AirMapOverlay extends AirMapFeature implements ImageReadable {
     }
     @Override
     protected Bitmap doInBackground(String... args) {
+      int retryCount = 0;
+      int maxRetries = 5;
       if (isCancelled() != true) {
-        try {
+        while (true) {
+          try {
 //          bitmap = BitmapFactory.decodeStream((InputStream) new URL(args[0]).getContent());
-          bitmap = BitmapFactory.decodeStream(new URL(args[0]).openStream());
+            bitmap = BitmapFactory.decodeStream(new URL(args[0]).openStream());
 //        overlayImageList.add(bitmap);
+            return bitmap;
+          } catch (SocketTimeoutException toe) {
+            if (++retryCount >= maxRetries) {
+              toe.printStackTrace();
+              return null;
+            }
+          } catch (IOException ioEx) {
+            if (++retryCount >= maxRetries) {
+              ioEx.printStackTrace();
+              return null;
+            }
+          } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+          }
         }
-        catch (IOException ioEx)
-        {
-          ioEx.printStackTrace();
-        }
-        catch (Exception e) {
-          e.printStackTrace();
-
-        }
-        return bitmap;
       }
       else return null;
     }
+
     @Override
     protected void onPostExecute(Bitmap image) {
       if (!isCancelled()) {
